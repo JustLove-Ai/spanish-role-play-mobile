@@ -48,27 +48,28 @@ cd SpanishRolePlay
 npm install
 ```
 
-3. Set up environment variables:
+3. Set up Supabase credentials:
 
-**Important**: Copy `.env.example` to `.env` and add your credentials:
+**Important**: Add your Supabase credentials to `app.json`:
 
-```bash
-cp .env.example .env
+Open `app.json` and update the `extra` section:
+```json
+{
+  "expo": {
+    "extra": {
+      "supabaseUrl": "your-supabase-url-here",
+      "supabaseAnonKey": "your-supabase-anon-key-here"
+    }
+  }
+}
 ```
 
-Then edit `.env` and add your credentials:
-- Get OpenAI API key from https://platform.openai.com/api-keys
-- Get Supabase URL and Anon Key from https://supabase.com/dashboard (Project Settings > API)
+Get your credentials from:
+- Supabase URL and Anon Key: https://supabase.com/dashboard (Project Settings > API)
 
-```bash
-OPENAI_API_KEY=your-actual-openai-api-key-here
-EXPO_PUBLIC_SUPABASE_URL=your-supabase-url-here
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
-```
+**Note**: These values are bundled into your app. The anon key is safe to expose in client-side code (it's public by design). However, make sure you have Row Level Security (RLS) enabled on your Supabase tables for production use.
 
-**Note**: The `EXPO_PUBLIC_` prefix makes these variables accessible in the client app. This is Expo SDK 54's built-in environment variable support.
-
-**Security Note**: The `.env` file is gitignored and won't be committed. In production, API calls are made through Supabase Edge Functions to keep your OpenAI API key secure on the server side.
+**Security Note**: The OpenAI API key should ONLY be stored in your Supabase Edge Function secrets (never in the client app). This keeps your OpenAI API key secure on the server side.
 
 4. Start the development server:
 ```bash

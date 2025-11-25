@@ -1,6 +1,8 @@
+import Constants from 'expo-constants';
+
 // Supabase Edge Function configuration
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_URL = Constants.expoConfig.extra.supabaseUrl;
+const SUPABASE_ANON_KEY = Constants.expoConfig.extra.supabaseAnonKey;
 const WHISPER_EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/whisper-transcribe`;
 
 /**
@@ -40,8 +42,8 @@ export async function transcribeAudio(audioUri) {
     const response = await fetch(WHISPER_EDGE_FUNCTION_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${SUPABASE_ANON_KEY.trim()}`,
-        apikey: SUPABASE_ANON_KEY.trim(),
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        apikey: SUPABASE_ANON_KEY,
         "x-client-info": "rn-app",
       },
       body: formData
