@@ -1,10 +1,10 @@
-// OpenAI API configuration
-// IMPORTANT: Add your API key in a .env file
-const OPENAI_API_KEY = 'your-openai-api-key-here'; // Replace with your actual API key
-const WHISPER_API_URL = 'https://api.openai.com/v1/audio/transcriptions';
+// Supabase Edge Function configuration
+const SUPABASE_URL = 'https://njdztbggnwowqbtajsgh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qZHp0Ymdnbndvd3FidGFqc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwNTExMzIsImV4cCI6MjA3OTYyNzEzMn0.Rdk2fleh8Huyrjv_A9TnFCWDVzTcYt1Iml-im5UWnDI';
+const WHISPER_EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/whisper-transcribe`;
 
 /**
- * Transcribe audio using OpenAI Whisper API
+ * Transcribe audio using OpenAI Whisper API via Supabase Edge Function
  * @param {string} audioUri - URI of the recorded audio file
  * @returns {Promise<string>} - Transcribed text
  */
@@ -34,29 +34,28 @@ export async function transcribeAudio(audioUri) {
       type: fileType,
       name: fileName
     });
-    formData.append('model', 'whisper-1');
     formData.append('language', 'es'); // Spanish
-    formData.append('response_format', 'text');
 
-    // Make direct API call using fetch
-    const response = await fetch(WHISPER_API_URL, {
+    // Call Supabase Edge Function instead of OpenAI directly
+    const response = await fetch(WHISPER_EDGE_FUNCTION_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: formData
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Whisper API Error Response:', errorData);
-      throw new Error(`Whisper API returned ${response.status}: ${errorData}`);
+      console.error('Whisper Edge Function Error Response:', errorData);
+      throw new Error(`Whisper Edge Function returned ${response.status}: ${errorData}`);
     }
 
-    const transcription = await response.text();
+    const result = await response.json();
+    const transcription = result.text || result;
     console.log('Transcription result:', transcription);
 
-    return transcription.trim();
+    return typeof transcription === 'string' ? transcription.trim() : JSON.stringify(transcription);
   } catch (error) {
     console.error('Whisper API Error:', error);
     throw new Error('Failed to transcribe audio: ' + error.message);
