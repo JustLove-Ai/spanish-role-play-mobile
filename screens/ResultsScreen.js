@@ -12,7 +12,8 @@ import {
   ClockIcon,
   MapPinIcon,
   CheckCircleIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  HomeIcon
 } from 'react-native-heroicons/solid';
 
 export default function ResultsScreen({ route, navigation }) {
@@ -136,9 +137,9 @@ export default function ResultsScreen({ route, navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => navigation.navigate('DayStreak', { dayStreak: 1 })}
+          onPress={() => navigation.navigate('Home')}
         >
-          <Text style={styles.primaryButtonText}>New Scenario</Text>
+          <HomeIcon size={24} color="white" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -309,15 +310,16 @@ const styles = StyleSheet.create({
     color: '#2D3748'
   },
   primaryButton: {
-    flex: 1,
+    width: 56,
+    height: 56,
     backgroundColor: '#4A90E2',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center'
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white'
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6
   }
 });
