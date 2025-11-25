@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,11 +14,18 @@ import {
   MapPinIcon,
   CheckCircleIcon,
   ChartBarIcon,
-  HomeIcon
+  HomeIcon,
+  ChatBubbleBottomCenterTextIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  SparklesIcon
 } from 'react-native-heroicons/solid';
 
 export default function ResultsScreen({ route, navigation }) {
-  const { scenario, completedGoals, totalGoals, timeUsed } = route.params;
+  const { scenario, completedGoals, totalGoals, timeUsed, transcript = [] } = route.params;
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [grammarAnalysis, setGrammarAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const percentage = Math.round((completedGoals / totalGoals) * 100);
   const isExcellent = percentage >= 90;
@@ -53,6 +61,36 @@ export default function ResultsScreen({ route, navigation }) {
 
   const feedback = getFeedback();
 
+  const analyzeGrammar = async () => {
+    setIsAnalyzing(true);
+    try {
+      // TODO: Call AI grammar analysis Edge Function
+      // For now, show a placeholder
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setGrammarAnalysis({
+        summary: "Your Spanish is improving! Here are some areas to focus on:",
+        points: [
+          {
+            type: "good",
+            message: "Great use of present tense verbs"
+          },
+          {
+            type: "improve",
+            message: "Consider using 'estar' for temporary states instead of 'ser'"
+          },
+          {
+            type: "improve",
+            message: "Remember to use gender agreement with adjectives"
+          }
+        ]
+      });
+    } catch (error) {
+      console.error('Grammar analysis error:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
@@ -62,7 +100,11 @@ export default function ResultsScreen({ route, navigation }) {
         <Text style={styles.headerTitle}>{feedback.title}</Text>
       </LinearGradient>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.statsCard}>
           <Text style={styles.cardTitle}>Your Performance</Text>
 
@@ -126,7 +168,85 @@ export default function ResultsScreen({ route, navigation }) {
               : "Don't worry! Learning a language takes time. Review the vocabulary and try again."}
           </Text>
         </View>
-      </View>
+
+        {/* Conversation Transcript */}
+        {transcript.length > 0 && (
+          <View style={styles.transcriptCard}>
+            <TouchableOpacity
+              style={styles.transcriptHeader}
+              onPress={() => setShowTranscript(!showTranscript)}
+            >
+              <View style={styles.transcriptHeaderLeft}>
+                <ChatBubbleBottomCenterTextIcon size={24} color="#4A90E2" />
+                <Text style={styles.transcriptTitle}>Conversation Transcript</Text>
+              </View>
+              {showTranscript ? (
+                <ChevronUpIcon size={20} color="#718096" />
+              ) : (
+                <ChevronDownIcon size={20} color="#718096" />
+              )}
+            </TouchableOpacity>
+
+            {showTranscript && (
+              <>
+                <View style={styles.transcriptContent}>
+                  {transcript.map((entry, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.messageRow,
+                        entry.speaker === 'You' && styles.messageRowUser
+                      ]}
+                    >
+                      <Text style={styles.messageSpeaker}>{entry.speaker}:</Text>
+                      <Text style={styles.messageText}>{entry.message}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={styles.analyzeButton}
+                  onPress={analyzeGrammar}
+                  disabled={isAnalyzing}
+                >
+                  {isAnalyzing ? (
+                    <ActivityIndicator size="small" color="#7C3AED" />
+                  ) : (
+                    <>
+                      <SparklesIcon size={20} color="#7C3AED" />
+                      <Text style={styles.analyzeButtonText}>
+                        Analyze My Grammar
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                {grammarAnalysis && (
+                  <View style={styles.analysisCard}>
+                    <Text style={styles.analysisSummary}>
+                      {grammarAnalysis.summary}
+                    </Text>
+                    {grammarAnalysis.points.map((point, index) => (
+                      <View key={index} style={styles.analysisPoint}>
+                        <View
+                          style={[
+                            styles.analysisDot,
+                            point.type === 'good' ? styles.analysisDotGood : styles.analysisDotImprove
+                          ]}
+                        />
+                        <Text style={styles.analysisPointText}>{point.message}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Add spacing for footer */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity
@@ -163,7 +283,9 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   content: {
-    flex: 1,
+    flex: 1
+  },
+  scrollContent: {
     padding: 20
   },
   statsCard: {
@@ -283,6 +405,118 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: '#22543D',
+    lineHeight: 20
+  },
+  transcriptCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    overflow: 'hidden'
+  },
+  transcriptHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0'
+  },
+  transcriptHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  transcriptTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2D3748'
+  },
+  transcriptContent: {
+    padding: 20,
+    gap: 16
+  },
+  messageRow: {
+    backgroundColor: '#F7FAFC',
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4A90E2'
+  },
+  messageRowUser: {
+    backgroundColor: '#EBF8FF',
+    borderLeftColor: '#7C3AED'
+  },
+  messageSpeaker: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A90E2',
+    marginBottom: 4
+  },
+  messageText: {
+    fontSize: 15,
+    color: '#2D3748',
+    lineHeight: 22
+  },
+  analyzeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#F3E8FF',
+    padding: 14,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#7C3AED'
+  },
+  analyzeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#7C3AED'
+  },
+  analysisCard: {
+    backgroundColor: '#FFFAF0',
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ED8936'
+  },
+  analysisSummary: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2D3748',
+    marginBottom: 16
+  },
+  analysisPoint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    gap: 12
+  },
+  analysisDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 6
+  },
+  analysisDotGood: {
+    backgroundColor: '#48BB78'
+  },
+  analysisDotImprove: {
+    backgroundColor: '#ED8936'
+  },
+  analysisPointText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#2D3748',
     lineHeight: 20
   },
   footer: {

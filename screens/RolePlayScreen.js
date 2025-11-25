@@ -29,6 +29,7 @@ import {
   CheckCircleIcon,
   XMarkIcon
 } from 'react-native-heroicons/solid';
+import { transcribeAudio } from '../services/whisperService';
 
 export default function RolePlayScreen({ route, navigation }) {
   const { scenario, earnedPoints = 0 } = route.params;
@@ -41,6 +42,7 @@ export default function RolePlayScreen({ route, navigation }) {
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showVocab, setShowVocab] = useState(false);
+  const [transcript, setTranscript] = useState([]);
 
   const allVocab = [
     ...scenario.words.map(item => ({ ...item, type: 'word' })),
@@ -82,6 +84,12 @@ export default function RolePlayScreen({ route, navigation }) {
 
   const speakAIMessage = (text) => {
     setCurrentMessage(text);
+    // Add AI message to transcript
+    setTranscript(prev => [...prev, {
+      speaker: scenario.avatarName,
+      message: text,
+      timestamp: new Date().toISOString()
+    }]);
     Speech.speak(text, {
       language: 'es-MX',
       pitch: 1.0,
@@ -134,7 +142,38 @@ export default function RolePlayScreen({ route, navigation }) {
 
     try {
       setIsProcessing(true);
-      await recorder.stop();
+      const recordingResult = await recorder.stop();
+
+      // Extract and prepare URI for transcription
+      const uri = typeof recordingResult === 'string'
+        ? recordingResult
+        : (recordingResult?.url || recordingResult?.uri);
+
+      if (uri && typeof uri === 'string') {
+        try {
+          // Add file:// prefix if missing
+          const fileUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+
+          // Transcribe user's response
+          const userResponse = await transcribeAudio(fileUri);
+
+          // Add user message to transcript
+          setTranscript(prev => [...prev, {
+            speaker: 'You',
+            message: userResponse,
+            timestamp: new Date().toISOString()
+          }]);
+        } catch (transcribeErr) {
+          console.error('Failed to transcribe user response:', transcribeErr);
+          // Add placeholder if transcription fails
+          setTranscript(prev => [...prev, {
+            speaker: 'You',
+            message: '[Audio recorded]',
+            timestamp: new Date().toISOString()
+          }]);
+        }
+      }
+
       setIsProcessing(false);
 
       setTimeout(() => {
@@ -174,7 +213,8 @@ export default function RolePlayScreen({ route, navigation }) {
       completedGoals,
       totalGoals,
       earnedPoints,
-      timeUsed: scenario.duration - timeRemaining
+      timeUsed: scenario.duration - timeRemaining,
+      transcript
     });
   };
 
