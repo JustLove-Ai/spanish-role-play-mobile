@@ -10,6 +10,7 @@ import VocabularyScreen from './screens/VocabularyScreen';
 import GoalsScreen from './screens/GoalsScreen';
 import RolePlayScreen from './screens/RolePlayScreen';
 import ResultsScreen from './screens/ResultsScreen';
+import DayStreakScreen from './screens/DayStreakScreen';
 
 const Stack = createStackNavigator();
 
@@ -30,6 +31,7 @@ export default function App() {
           <Stack.Screen name="Goals" component={GoalsScreen} />
           <Stack.Screen name="RolePlay" component={RolePlayScreen} />
           <Stack.Screen name="Results" component={ResultsScreen} />
+          <Stack.Screen name="DayStreak" component={DayStreakScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

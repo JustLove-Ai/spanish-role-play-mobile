@@ -8,6 +8,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import {
+  ClockIcon,
+  MapPinIcon,
+  CheckCircleIcon,
+  ChartBarIcon
+} from 'react-native-heroicons/solid';
 
 export default function ResultsScreen({ route, navigation }) {
   const { scenario, completedGoals, totalGoals, timeUsed } = route.params;
@@ -52,15 +58,10 @@ export default function ResultsScreen({ route, navigation }) {
         colors={isExcellent ? ['#48BB78', '#38A169'] : isGood ? ['#4299E1', '#3182CE'] : ['#ED8936', '#DD6B20']}
         style={styles.header}
       >
-        <Text style={styles.headerIcon}>{feedback.icon}</Text>
         <Text style={styles.headerTitle}>{feedback.title}</Text>
-        <Text style={styles.headerSubtitle}>{feedback.message}</Text>
       </LinearGradient>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <View style={styles.content}>
         <View style={styles.statsCard}>
           <Text style={styles.cardTitle}>Your Performance</Text>
 
@@ -78,12 +79,12 @@ export default function ResultsScreen({ route, navigation }) {
 
           <View style={styles.statsRow}>
             <View style={styles.statColumn}>
-              <Text style={styles.statIcon}>⏱️</Text>
+              <ClockIcon size={28} color="#4A90E2" style={styles.statIcon} />
               <Text style={styles.statColumnValue}>{formatTime(timeUsed)}</Text>
               <Text style={styles.statColumnLabel}>Time Used</Text>
             </View>
             <View style={styles.statColumn}>
-              <Text style={styles.statIcon}>🎯</Text>
+              <MapPinIcon size={28} color="#4A90E2" style={styles.statIcon} />
               <Text style={styles.statColumnValue}>{scenario.title}</Text>
               <Text style={styles.statColumnLabel}>Scenario</Text>
             </View>
@@ -96,18 +97,15 @@ export default function ResultsScreen({ route, navigation }) {
             const completed = index < completedGoals;
             return (
               <View key={goal.id} style={styles.goalItem}>
-                <View
-                  style={[
-                    styles.goalCheckbox,
-                    completed && styles.goalCheckboxCompleted
-                  ]}
-                >
-                  {completed && <Text style={styles.checkmark}>✓</Text>}
-                </View>
+                <CheckCircleIcon
+                  size={24}
+                  color={completed ? '#48BB78' : '#CBD5E0'}
+                  style={styles.goalIcon}
+                />
                 <Text
                   style={[
                     styles.goalText,
-                    completed && styles.goalTextCompleted
+                    !completed && styles.goalTextIncomplete
                   ]}
                 >
                   {goal.content}
@@ -118,7 +116,7 @@ export default function ResultsScreen({ route, navigation }) {
         </View>
 
         <View style={styles.encouragementCard}>
-          <Text style={styles.encouragementIcon}>📈</Text>
+          <ChartBarIcon size={28} color="#22543D" style={styles.encouragementIcon} />
           <Text style={styles.encouragementText}>
             {percentage >= 90
               ? "You're ready for more advanced scenarios! Keep up the amazing work."
@@ -127,7 +125,7 @@ export default function ResultsScreen({ route, navigation }) {
               : "Don't worry! Learning a language takes time. Review the vocabulary and try again."}
           </Text>
         </View>
-      </ScrollView>
+      </View>
 
       <View style={styles.footer}>
         <TouchableOpacity
@@ -138,7 +136,7 @@ export default function ResultsScreen({ route, navigation }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('DayStreak', { dayStreak: 1 })}
         >
           <Text style={styles.primaryButtonText}>New Scenario</Text>
         </TouchableOpacity>
@@ -153,33 +151,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7FAFC'
   },
   header: {
-    padding: 30,
-    paddingTop: 50,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 16,
     alignItems: 'center'
   },
-  headerIcon: {
-    fontSize: 60,
-    marginBottom: 16
-  },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8
+    color: 'white'
   },
-  headerSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.95)',
-    textAlign: 'center',
-    paddingHorizontal: 20
-  },
-  scrollView: {
-    flex: 1
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100
+  content: {
+    flex: 1,
+    padding: 20
   },
   statsCard: {
     backgroundColor: 'white',
@@ -240,7 +224,6 @@ const styles = StyleSheet.create({
     flex: 1
   },
   statIcon: {
-    fontSize: 32,
     marginBottom: 8
   },
   statColumnValue: {
@@ -271,31 +254,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16
   },
-  goalCheckbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: '#CBD5E0',
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  goalCheckboxCompleted: {
-    backgroundColor: '#48BB78',
-    borderColor: '#48BB78'
-  },
-  checkmark: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold'
+  goalIcon: {
+    marginRight: 12
   },
   goalText: {
     flex: 1,
     fontSize: 15,
-    color: '#4A5568'
+    color: '#2D3748',
+    fontWeight: '500'
   },
-  goalTextCompleted: {
+  goalTextIncomplete: {
     color: '#A0AEC0'
   },
   encouragementCard: {
@@ -308,7 +276,6 @@ const styles = StyleSheet.create({
     borderLeftColor: '#48BB78'
   },
   encouragementIcon: {
-    fontSize: 32,
     marginRight: 16
   },
   encouragementText: {
