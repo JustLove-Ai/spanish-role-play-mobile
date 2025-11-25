@@ -62,9 +62,11 @@ Then edit `.env` and add your credentials:
 
 ```bash
 OPENAI_API_KEY=your-actual-openai-api-key-here
-SUPABASE_URL=your-supabase-url-here
-SUPABASE_ANON_KEY=your-supabase-anon-key-here
+EXPO_PUBLIC_SUPABASE_URL=your-supabase-url-here
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
 ```
+
+**Note**: The `EXPO_PUBLIC_` prefix makes these variables accessible in the client app. This is Expo SDK 54's built-in environment variable support.
 
 **Security Note**: The `.env` file is gitignored and won't be committed. In production, API calls are made through Supabase Edge Functions to keep your OpenAI API key secure on the server side.
 

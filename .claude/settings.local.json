@@ -11,9 +11,22 @@
       "Bash(git commit:*)",
       "Bash(git config:*)",
       "Bash(git push:*)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:supabase.com)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude mcp list:*)",
+      "Bash(claude mcp remove:*)",
+      "mcp__supabase__list_projects",
+      "mcp__supabase__deploy_edge_function",
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_anon_key",
+      "Bash(npx expo start:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
 }

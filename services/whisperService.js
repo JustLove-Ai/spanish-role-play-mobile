@@ -1,6 +1,6 @@
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
-
 // Supabase Edge Function configuration
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 const WHISPER_EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/whisper-transcribe`;
 
 /**
