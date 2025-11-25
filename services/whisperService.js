@@ -40,7 +40,9 @@ export async function transcribeAudio(audioUri) {
     const response = await fetch(WHISPER_EDGE_FUNCTION_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY.trim()}`,
+        apikey: SUPABASE_ANON_KEY.trim(),
+        "x-client-info": "rn-app",
       },
       body: formData
     });
