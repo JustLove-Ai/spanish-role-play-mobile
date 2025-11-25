@@ -33,7 +33,7 @@ A React Native mobile app built with Expo that helps users learn Spanish through
 - **Expo Speech** for text-to-speech
 - **Expo Audio** for audio recording
 - **Expo Linear Gradient** for beautiful UI effects
-- **OpenAI Whisper API** for speech-to-text transcription
+- **OpenAI Whisper REST API** for speech-to-text transcription (via fetch)
 - **React Native Heroicons** for consistent iconography
 
 ## Installation
@@ -49,17 +49,15 @@ npm install
 ```
 
 3. Set up OpenAI API Key:
-```bash
-# Copy the example environment file
-cp .env.example .env
-
-# Edit .env and add your OpenAI API key
-OPENAI_API_KEY=your-actual-api-key-here
-```
 
 **Important**: Get your API key from https://platform.openai.com/api-keys
 
-**Security Note**: In production, API calls should be made from a backend server to keep your API key secure. The current implementation uses `dangerouslyAllowBrowser` which is only suitable for development.
+Edit `services/whisperService.js` and replace the API key:
+```javascript
+const OPENAI_API_KEY = 'your-actual-openai-api-key-here';
+```
+
+**Security Note**: In production, API calls should be made from a backend server to keep your API key secure. Never expose API keys in client-side code in production.
 
 4. Start the development server:
 ```bash

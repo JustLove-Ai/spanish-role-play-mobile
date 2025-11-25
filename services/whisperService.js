@@ -1,11 +1,7 @@
-import OpenAI from 'openai';
-
-// Initialize OpenAI client
-// In production, store this in environment variables
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'your-api-key-here',
-  dangerouslyAllowBrowser: true // Note: In production, call API from backend
-});
+// OpenAI API configuration
+// IMPORTANT: Add your API key in a .env file
+const OPENAI_API_KEY = 'your-openai-api-key-here'; // Replace with your actual API key
+const WHISPER_API_URL = 'https://api.openai.com/v1/audio/transcriptions';
 
 /**
  * Transcribe audio using OpenAI Whisper API
@@ -14,23 +10,56 @@ const openai = new OpenAI({
  */
 export async function transcribeAudio(audioUri) {
   try {
-    // Convert audio URI to File/Blob for upload
-    const response = await fetch(audioUri);
-    const blob = await response.blob();
-    const file = new File([blob], 'recording.wav', { type: 'audio/wav' });
+    console.log('Transcribing audio from:', audioUri);
 
-    // Call Whisper API
-    const transcription = await openai.audio.transcriptions.create({
-      file: file,
-      model: 'whisper-1',
-      language: 'es', // Spanish
-      response_format: 'text'
+    // Determine file type from URI
+    let fileType = 'audio/m4a'; // default for iOS
+    let fileName = 'recording.m4a';
+
+    if (audioUri.includes('.wav')) {
+      fileType = 'audio/wav';
+      fileName = 'recording.wav';
+    } else if (audioUri.includes('.mp3')) {
+      fileType = 'audio/mp3';
+      fileName = 'recording.mp3';
+    } else if (audioUri.includes('.mp4')) {
+      fileType = 'audio/mp4';
+      fileName = 'recording.mp4';
+    }
+
+    // Create FormData for file upload (React Native compatible)
+    const formData = new FormData();
+    formData.append('file', {
+      uri: audioUri,
+      type: fileType,
+      name: fileName
     });
+    formData.append('model', 'whisper-1');
+    formData.append('language', 'es'); // Spanish
+    formData.append('response_format', 'text');
+
+    // Make direct API call using fetch
+    const response = await fetch(WHISPER_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Whisper API Error Response:', errorData);
+      throw new Error(`Whisper API returned ${response.status}: ${errorData}`);
+    }
+
+    const transcription = await response.text();
+    console.log('Transcription result:', transcription);
 
     return transcription.trim();
   } catch (error) {
     console.error('Whisper API Error:', error);
-    throw new Error('Failed to transcribe audio');
+    throw new Error('Failed to transcribe audio: ' + error.message);
   }
 }
 
