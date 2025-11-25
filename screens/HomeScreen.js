@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,80 +10,153 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { scenarios } from '../data/scenarios';
+import {
+  ClockIcon,
+  BookOpenIcon,
+  FlagIcon,
+  FireIcon
+} from 'react-native-heroicons/solid';
 
 export default function HomeScreen({ navigation }) {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const categories = ['All', 'Travel', 'Food', 'Hotel'];
+
+  const featuredScenario = scenarios[0];
+  const recentScenarios = scenarios.slice(1);
+
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#667EEA', '#764BA2']}
-        style={styles.header}
-      >
-        <Text style={styles.headerTitle}>Spanish Role Play</Text>
-        <Text style={styles.headerSubtitle}>
-          Learn Spanish through real conversations
-        </Text>
-      </LinearGradient>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>For you</Text>
+        <View style={styles.streak}>
+          <FireIcon size={20} color="#FF6B35" />
+          <Text style={styles.streakText}>3</Text>
+        </View>
+      </View>
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.sectionTitle}>Choose Your Scenario</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categories}
+          contentContainerStyle={styles.categoriesContent}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryChip,
+                selectedCategory === category && styles.categoryChipActive
+              ]}
+              onPress={() => setSelectedCategory(category)}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === category && styles.categoryTextActive
+                ]}
+              >
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <TouchableOpacity
+          style={styles.featuredCard}
+          onPress={() => navigation.navigate('Vocabulary', { scenario: featuredScenario })}
+        >
+          <LinearGradient
+            colors={['#4A90E2', '#357ABD']}
+            style={styles.featuredGradient}
+          >
+            <View style={styles.avatarBadge}>
+              <Image
+                source={{ uri: featuredScenario.avatar }}
+                style={styles.featuredAvatar}
+              />
+            </View>
+            <Text style={styles.featuredTitle}>{featuredScenario.title}</Text>
+            <Text style={styles.featuredDescription}>
+              {featuredScenario.description}
+            </Text>
+            <Text style={styles.featuredAuthor}>— {featuredScenario.avatarName}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <Text style={styles.sectionTitle}>Recently added</Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.recentScenarios}
+        >
+          {recentScenarios.map((scenario) => (
+            <TouchableOpacity
+              key={scenario.id}
+              style={styles.recentCard}
+              onPress={() => navigation.navigate('Vocabulary', { scenario })}
+            >
+              <Image
+                source={{ uri: scenario.avatar }}
+                style={styles.recentImage}
+              />
+              <View style={styles.recentOverlay}>
+                <Text style={styles.recentTitle}>{scenario.title}</Text>
+                <View style={styles.recentMeta}>
+                  <ClockIcon size={12} color="white" />
+                  <Text style={styles.recentMetaText}>
+                    {Math.floor(scenario.duration / 60)} min
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <Text style={styles.sectionTitle}>All Scenarios</Text>
 
         {scenarios.map((scenario) => (
           <TouchableOpacity
             key={scenario.id}
             style={styles.scenarioCard}
-            onPress={() =>
-              navigation.navigate('Vocabulary', { scenario })
-            }
+            onPress={() => navigation.navigate('Vocabulary', { scenario })}
           >
             <Image
               source={{ uri: scenario.avatar }}
-              style={styles.scenarioAvatar}
+              style={styles.scenarioImage}
             />
             <View style={styles.scenarioInfo}>
               <Text style={styles.scenarioTitle}>{scenario.title}</Text>
-              <Text style={styles.scenarioDescription}>
+              <Text style={styles.scenarioDescription} numberOfLines={2}>
                 {scenario.description}
               </Text>
               <View style={styles.scenarioMeta}>
                 <View style={styles.metaItem}>
-                  <Text style={styles.metaIcon}>⏱️</Text>
+                  <ClockIcon size={14} color="#A0AEC0" />
                   <Text style={styles.metaText}>
                     {Math.floor(scenario.duration / 60)} min
                   </Text>
                 </View>
                 <View style={styles.metaItem}>
-                  <Text style={styles.metaIcon}>📚</Text>
+                  <BookOpenIcon size={14} color="#A0AEC0" />
                   <Text style={styles.metaText}>
-                    {scenario.words.length + scenario.phrases.length} items
+                    {scenario.words.length + scenario.phrases.length}
                   </Text>
                 </View>
                 <View style={styles.metaItem}>
-                  <Text style={styles.metaIcon}>🎯</Text>
+                  <FlagIcon size={14} color="#A0AEC0" />
                   <Text style={styles.metaText}>
-                    {scenario.goals.length} goals
+                    {scenario.goals.length}
                   </Text>
                 </View>
               </View>
             </View>
-            <Text style={styles.arrow}>→</Text>
           </TouchableOpacity>
         ))}
-
-        <View style={styles.tipCard}>
-          <Text style={styles.tipIcon}>💡</Text>
-          <View style={styles.tipContent}>
-            <Text style={styles.tipTitle}>How it works</Text>
-            <Text style={styles.tipText}>
-              1. Learn key phrases before starting{'\n'}
-              2. Practice speaking with an AI character{'\n'}
-              3. Complete goals through natural conversation{'\n'}
-              4. Build confidence in real-world situations
-            </Text>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -92,68 +165,187 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7FAFC'
+    backgroundColor: 'white'
   },
   header: {
-    padding: 30,
-    paddingTop: 50,
-    paddingBottom: 40
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 12
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 8
+    color: '#1A202C'
   },
-  headerSubtitle: {
+  streak: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4
+  },
+  streakText: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.9)'
+    fontWeight: 'bold',
+    color: '#FF6B35'
   },
   scrollView: {
     flex: 1
   },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40
+  categories: {
+    paddingLeft: 20,
+    marginBottom: 20
   },
-  sectionTitle: {
+  categoriesContent: {
+    gap: 8,
+    paddingRight: 20
+  },
+  categoryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F7FAFC'
+  },
+  categoryChipActive: {
+    backgroundColor: '#4A90E2'
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A5568'
+  },
+  categoryTextActive: {
+    color: 'white'
+  },
+  featuredCard: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6
+  },
+  featuredGradient: {
+    padding: 24,
+    minHeight: 240,
+    justifyContent: 'flex-end'
+  },
+  avatarBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'white',
+    padding: 3
+  },
+  featuredAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21
+  },
+  featuredTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#2D3748',
-    marginBottom: 16
+    color: 'white',
+    marginBottom: 8
+  },
+  featuredDescription: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.95)',
+    marginBottom: 8,
+    lineHeight: 22
+  },
+  featuredAuthor: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    fontStyle: 'italic'
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1A202C',
+    marginBottom: 16,
+    paddingHorizontal: 20
+  },
+  recentScenarios: {
+    paddingLeft: 20,
+    paddingRight: 20,
+    gap: 12,
+    marginBottom: 32
+  },
+  recentCard: {
+    width: 160,
+    height: 200,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F7FAFC'
+  },
+  recentImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute'
+  },
+  recentOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)'
+  },
+  recentTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 6
+  },
+  recentMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4
+  },
+  recentMetaText: {
+    fontSize: 11,
+    color: 'white',
+    fontWeight: '500'
   },
   scenarioCard: {
     flexDirection: 'row',
     backgroundColor: 'white',
     borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3
+    marginHorizontal: 20,
+    marginBottom: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
   },
-  scenarioAvatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginRight: 16
+  scenarioImage: {
+    width: 100,
+    height: 100
   },
   scenarioInfo: {
-    flex: 1
+    flex: 1,
+    padding: 12,
+    justifyContent: 'center'
   },
   scenarioTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#2D3748',
-    marginBottom: 6
+    marginBottom: 4
   },
   scenarioDescription: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#718096',
-    marginBottom: 12,
+    marginBottom: 8,
     lineHeight: 18
   },
   scenarioMeta: {
@@ -162,46 +354,12 @@ const styles = StyleSheet.create({
   },
   metaItem: {
     flexDirection: 'row',
-    alignItems: 'center'
-  },
-  metaIcon: {
-    fontSize: 14,
-    marginRight: 4
+    alignItems: 'center',
+    gap: 4
   },
   metaText: {
-    fontSize: 12,
-    color: '#A0AEC0'
-  },
-  arrow: {
-    fontSize: 24,
-    color: '#CBD5E0',
-    marginLeft: 8
-  },
-  tipCard: {
-    flexDirection: 'row',
-    backgroundColor: '#EBF8FF',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4299E1'
-  },
-  tipIcon: {
-    fontSize: 32,
-    marginRight: 16
-  },
-  tipContent: {
-    flex: 1
-  },
-  tipTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2C5282',
-    marginBottom: 8
-  },
-  tipText: {
-    fontSize: 14,
-    color: '#2C5282',
-    lineHeight: 22
+    fontSize: 11,
+    color: '#A0AEC0',
+    fontWeight: '500'
   }
 });
