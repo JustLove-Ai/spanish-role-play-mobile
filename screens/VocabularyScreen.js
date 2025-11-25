@@ -18,8 +18,9 @@ import {
   requestRecordingPermissionsAsync,
   setAudioModeAsync
 } from 'expo-audio';
-import { SpeakerWaveIcon, MicrophoneIcon, PauseIcon } from 'react-native-heroicons/solid';
+import { SpeakerWaveIcon, MicrophoneIcon, PauseIcon, CheckCircleIcon, XCircleIcon } from 'react-native-heroicons/solid';
 import { FireIcon } from 'react-native-heroicons/solid';
+import { transcribeAudio, compareTexts } from '../services/whisperService';
 
 export default function VocabularyScreen({ route, navigation }) {
   const { scenario } = route.params;
@@ -36,6 +37,10 @@ export default function VocabularyScreen({ route, navigation }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [points, setPoints] = useState(0);
   const [scaleAnim] = useState(new Animated.Value(1));
+  const [attempts, setAttempts] = useState(0);
+  const [feedback, setFeedback] = useState(null);
+  const [transcribedText, setTranscribedText] = useState('');
+  const [isCorrect, setIsCorrect] = useState(false);
 
   useEffect(() => {
     speakPhrase(learningItems[currentIndex].spanish);
@@ -123,24 +128,45 @@ export default function VocabularyScreen({ route, navigation }) {
 
     try {
       setIsProcessing(true);
-      await recorder.stop();
+      const recordingUri = await recorder.stop();
       setHasRecorded(true);
 
-      const earnedPoints = learningItems[currentIndex].type === 'word' ? 5 : 10;
-      setPoints(points + earnedPoints);
-      animateSuccess();
+      // Get the recording URI
+      const uri = recordingUri?.uri || recordingUri;
+
+      if (!uri) {
+        throw new Error('No recording URI available');
+      }
+
+      // Transcribe audio using Whisper
+      const transcribed = await transcribeAudio(uri);
+      setTranscribedText(transcribed);
+
+      // Compare with expected text
+      const result = compareTexts(transcribed, learningItems[currentIndex].spanish);
+      setFeedback(result.feedback);
+      setIsCorrect(result.isCorrect);
+      setAttempts(attempts + 1);
+
+      if (result.isCorrect) {
+        const earnedPoints = learningItems[currentIndex].type === 'word' ? 5 : 10;
+        setPoints(points + earnedPoints);
+        animateSuccess();
+      }
+
       setIsProcessing(false);
     } catch (err) {
-      console.error('Failed to stop recording', err);
+      console.error('Failed to process recording', err);
       setIsProcessing(false);
-      Alert.alert('Recording Error', 'Unable to stop recording.');
+      setFeedback('Could not verify pronunciation. Try again?');
+      Alert.alert('Processing Error', 'Unable to process your recording. Please try again.');
     }
   };
 
   const handleNext = () => {
     if (currentIndex < learningItems.length - 1) {
       setCurrentIndex(currentIndex + 1);
-      setHasRecorded(false);
+      resetItemState();
     } else {
       navigation.navigate('Goals', { scenario, earnedPoints: points });
     }
@@ -149,8 +175,24 @@ export default function VocabularyScreen({ route, navigation }) {
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
-      setHasRecorded(false);
+      resetItemState();
     }
+  };
+
+  const handleTryAgain = () => {
+    resetItemState();
+  };
+
+  const handleSkipItem = () => {
+    handleNext();
+  };
+
+  const resetItemState = () => {
+    setHasRecorded(false);
+    setAttempts(0);
+    setFeedback(null);
+    setTranscribedText('');
+    setIsCorrect(false);
   };
 
   const handleSkipToRolePlay = () => {
@@ -217,11 +259,56 @@ export default function VocabularyScreen({ route, navigation }) {
             <Text style={styles.english}>{currentItem.english}</Text>
           </View>
 
-          {hasRecorded && (
-            <View style={styles.successBadge}>
-              <Text style={styles.successText}>
-                +{learningItems[currentIndex].type === 'word' ? '5' : '10'} points!
-              </Text>
+          {hasRecorded && feedback && (
+            <View style={styles.feedbackSection}>
+              <View style={[
+                styles.feedbackBadge,
+                isCorrect ? styles.feedbackBadgeSuccess : styles.feedbackBadgeError
+              ]}>
+                {isCorrect ? (
+                  <CheckCircleIcon size={24} color="#22543D" />
+                ) : (
+                  <XCircleIcon size={24} color="#742A2A" />
+                )}
+                <Text style={[
+                  styles.feedbackText,
+                  isCorrect ? styles.feedbackTextSuccess : styles.feedbackTextError
+                ]}>
+                  {feedback}
+                </Text>
+              </View>
+
+              {transcribedText && (
+                <View style={styles.transcriptionBox}>
+                  <Text style={styles.transcriptionLabel}>You said:</Text>
+                  <Text style={styles.transcriptionText}>{transcribedText}</Text>
+                </View>
+              )}
+
+              {isCorrect ? (
+                <View style={styles.pointsBadgeInline}>
+                  <Text style={styles.pointsEarned}>
+                    +{learningItems[currentIndex].type === 'word' ? '5' : '10'} points!
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.retryButtons}>
+                  <TouchableOpacity
+                    style={styles.retryButton}
+                    onPress={handleTryAgain}
+                  >
+                    <Text style={styles.retryButtonText}>Try Again</Text>
+                  </TouchableOpacity>
+                  {attempts >= 2 && (
+                    <TouchableOpacity
+                      style={styles.skipButton}
+                      onPress={handleSkipItem}
+                    >
+                      <Text style={styles.skipButtonText}>Move On</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -257,10 +344,10 @@ export default function VocabularyScreen({ route, navigation }) {
         <TouchableOpacity
           style={[
             styles.navButton,
-            !hasRecorded && styles.navButtonDisabled
+            !(isCorrect || attempts >= 2) && styles.navButtonDisabled
           ]}
           onPress={handleNext}
-          disabled={!hasRecorded}
+          disabled={!(isCorrect || attempts >= 2)}
         >
           <Text style={styles.navIcon}>›</Text>
         </TouchableOpacity>
@@ -473,5 +560,90 @@ const styles = StyleSheet.create({
   },
   micButtonDisabled: {
     opacity: 0.6
+  },
+  feedbackSection: {
+    width: '100%',
+    marginTop: 20,
+    gap: 12
+  },
+  feedbackBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8
+  },
+  feedbackBadgeSuccess: {
+    backgroundColor: '#C6F6D5'
+  },
+  feedbackBadgeError: {
+    backgroundColor: '#FED7D7'
+  },
+  feedbackText: {
+    fontSize: 16,
+    fontWeight: 'bold'
+  },
+  feedbackTextSuccess: {
+    color: '#22543D'
+  },
+  feedbackTextError: {
+    color: '#742A2A'
+  },
+  transcriptionBox: {
+    backgroundColor: '#F7FAFC',
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4A90E2'
+  },
+  transcriptionLabel: {
+    fontSize: 12,
+    color: '#718096',
+    marginBottom: 4,
+    fontWeight: '600'
+  },
+  transcriptionText: {
+    fontSize: 14,
+    color: '#2D3748',
+    fontStyle: 'italic'
+  },
+  pointsBadgeInline: {
+    alignItems: 'center',
+    paddingVertical: 8
+  },
+  pointsEarned: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#48BB78'
+  },
+  retryButtons: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8
+  },
+  retryButton: {
+    flex: 1,
+    backgroundColor: '#4A90E2',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center'
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white'
+  },
+  skipButton: {
+    flex: 1,
+    backgroundColor: '#E2E8F0',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center'
+  },
+  skipButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A5568'
   }
 });

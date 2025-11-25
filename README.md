@@ -10,8 +10,10 @@ A React Native mobile app built with Expo that helps users learn Spanish through
   - Checking into a hotel
 
 - **Pre-Lesson Vocabulary**: Learn key phrases before each scenario
-  - Spanish phrases with pronunciation guides
-  - Audio playback using text-to-speech
+  - Spanish phrases with audio playback
+  - Speech recognition with OpenAI Whisper
+  - Real-time pronunciation verification
+  - Retry system with feedback (2 attempts before moving on)
   - English translations
 
 - **AI Avatar Conversations**: Speak with AI characters
@@ -29,8 +31,10 @@ A React Native mobile app built with Expo that helps users learn Spanish through
 - **Expo Go** compatible (no custom native code)
 - **React Navigation** for screen navigation
 - **Expo Speech** for text-to-speech
-- **Expo AV** for audio recording
+- **Expo Audio** for audio recording
 - **Expo Linear Gradient** for beautiful UI effects
+- **OpenAI Whisper API** for speech-to-text transcription
+- **React Native Heroicons** for consistent iconography
 
 ## Installation
 
@@ -39,17 +43,30 @@ A React Native mobile app built with Expo that helps users learn Spanish through
 cd SpanishRolePlay
 ```
 
-2. Install dependencies (already done):
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development server:
+3. Set up OpenAI API Key:
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env and add your OpenAI API key
+OPENAI_API_KEY=your-actual-api-key-here
+```
+
+**Important**: Get your API key from https://platform.openai.com/api-keys
+
+**Security Note**: In production, API calls should be made from a backend server to keep your API key secure. The current implementation uses `dangerouslyAllowBrowser` which is only suitable for development.
+
+4. Start the development server:
 ```bash
 npx expo start
 ```
 
-4. Run on your device:
+5. Run on your device:
    - Download **Expo Go** app on your iOS or Android device
    - Scan the QR code from the terminal
    - Or press `a` for Android emulator or `i` for iOS simulator
@@ -66,14 +83,19 @@ npx expo start
 
 ```
 SpanishRolePlay/
-├── App.js                  # Main navigation setup
+├── App.js                   # Main navigation setup
 ├── data/
-│   └── scenarios.js        # Demo scenarios and vocabulary data
+│   └── scenarios.js         # Demo scenarios and vocabulary data
 ├── screens/
-│   ├── HomeScreen.js       # Scenario selection screen
-│   ├── VocabularyScreen.js # Pre-lesson vocabulary review
-│   ├── RolePlayScreen.js   # Main conversation screen with AI avatar
-│   └── ResultsScreen.js    # Performance summary screen
+│   ├── HomeScreen.js        # Scenario selection screen
+│   ├── VocabularyScreen.js  # Pre-lesson vocabulary with speech verification
+│   ├── GoalsScreen.js       # Goals preview before role play
+│   ├── RolePlayScreen.js    # Main conversation screen with AI avatar
+│   ├── ResultsScreen.js     # Performance summary screen
+│   └── DayStreakScreen.js   # Day streak celebration screen
+├── services/
+│   └── whisperService.js    # OpenAI Whisper API integration
+├── .env.example             # Environment variables template
 └── README.md
 ```
 
@@ -110,24 +132,31 @@ To add new scenarios, edit `data/scenarios.js` and follow the existing structure
 
 ## Permissions
 
-The app requires microphone access for voice recording during role-play sessions. You'll be prompted to grant permission when you first try to record.
+The app requires microphone access for voice recording and pronunciation verification. You'll be prompted to grant permission when you first try to record.
+
+## Speech Verification
+
+The app uses OpenAI's Whisper API to:
+1. Transcribe your spoken Spanish
+2. Compare it with the expected phrase
+3. Provide immediate feedback on pronunciation accuracy
+4. Calculate similarity score using Levenshtein distance
+5. Allow up to 2 retry attempts before moving on
+
+**Scoring**:
+- 100%: Perfect match
+- 80-99%: Great job (accepted as correct)
+- 60-79%: Close, try again
+- < 60%: Try again
 
 ## Future Enhancements
 
-- Integration with AI services (OpenAI, Google Cloud Speech-to-Text)
-- Real-time speech recognition and evaluation
+- Backend API server for secure OpenAI key storage
 - More advanced scenarios and difficulty levels
 - Progress tracking across sessions
 - User profiles and achievement systems
 - Additional languages
-
-## Notes
-
-This is a demo version with simulated AI responses. For production use:
-1. Integrate a speech-to-text API for transcription
-2. Connect to a language model API for dynamic responses
-3. Add pronunciation evaluation
-4. Implement user authentication and data persistence
+- Voice analysis and accent coaching
 
 ## License
 
