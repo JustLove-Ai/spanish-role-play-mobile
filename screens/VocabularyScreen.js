@@ -128,14 +128,20 @@ export default function VocabularyScreen({ route, navigation }) {
 
     try {
       setIsProcessing(true);
-      const recordingUri = await recorder.stop();
+      const recordingResult = await recorder.stop();
       setHasRecorded(true);
 
-      // Get the recording URI
-      const uri = recordingUri?.uri || recordingUri;
+      // Extract the URI from the recording result
+      // expo-audio returns an object with a 'url' property
+      const uri = typeof recordingResult === 'string'
+        ? recordingResult
+        : (recordingResult?.url || recordingResult?.uri);
 
-      if (!uri) {
-        throw new Error('No recording URI available');
+      console.log('Recording result:', recordingResult);
+      console.log('Extracted URI:', uri);
+
+      if (!uri || typeof uri !== 'string') {
+        throw new Error('No valid recording URI available');
       }
 
       // Transcribe audio using Whisper
