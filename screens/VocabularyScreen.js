@@ -144,8 +144,12 @@ export default function VocabularyScreen({ route, navigation }) {
         throw new Error('No valid recording URI available');
       }
 
+      // Add file:// prefix if missing (required for React Native FormData)
+      const fileUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+      console.log('File URI for upload:', fileUri);
+
       // Transcribe audio using Whisper
-      const transcribed = await transcribeAudio(uri);
+      const transcribed = await transcribeAudio(fileUri);
       setTranscribedText(transcribed);
 
       // Compare with expected text
