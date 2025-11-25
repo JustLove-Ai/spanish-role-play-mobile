@@ -1,6 +1,6 @@
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@env';
+
 // Supabase Edge Function configuration
-const SUPABASE_URL = 'https://njdztbggnwowqbtajsgh.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5qZHp0Ymdnbndvd3FidGFqc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwNTExMzIsImV4cCI6MjA3OTYyNzEzMn0.Rdk2fleh8Huyrjv_A9TnFCWDVzTcYt1Iml-im5UWnDI';
 const WHISPER_EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/whisper-transcribe`;
 
 /**

@@ -48,16 +48,25 @@ cd SpanishRolePlay
 npm install
 ```
 
-3. Set up OpenAI API Key:
+3. Set up environment variables:
 
-**Important**: Get your API key from https://platform.openai.com/api-keys
+**Important**: Copy `.env.example` to `.env` and add your credentials:
 
-Edit `services/whisperService.js` and replace the API key:
-```javascript
-const OPENAI_API_KEY = 'your-actual-openai-api-key-here';
+```bash
+cp .env.example .env
 ```
 
-**Security Note**: In production, API calls should be made from a backend server to keep your API key secure. Never expose API keys in client-side code in production.
+Then edit `.env` and add your credentials:
+- Get OpenAI API key from https://platform.openai.com/api-keys
+- Get Supabase URL and Anon Key from https://supabase.com/dashboard (Project Settings > API)
+
+```bash
+OPENAI_API_KEY=your-actual-openai-api-key-here
+SUPABASE_URL=your-supabase-url-here
+SUPABASE_ANON_KEY=your-supabase-anon-key-here
+```
+
+**Security Note**: The `.env` file is gitignored and won't be committed. In production, API calls are made through Supabase Edge Functions to keep your OpenAI API key secure on the server side.
 
 4. Start the development server:
 ```bash
